@@ -16,6 +16,15 @@ spec:
       labels:
         app: {{ index .Values "modules" "text2vec-transformers" "fullnameOverride" }}
     spec:
+      {{- if index .Values "modules" "text2vec-transformers" "envconfig" "enable_cuda" }}
+      # hostIPC is required for Nvidia MPS communication
+      hostIPC: true
+      # This is how the AWS + Nvidia drivers are wired into the controller
+      volumes:
+      - name: nvidia-mps
+        hostPath:
+          path: /tmp/nvidia-mps
+      {{- end }}
       containers:
       - name: {{ index .Values "modules" "text2vec-transformers" "fullnameOverride" }}
         image: {{ index .Values "modules" "text2vec-transformers" "registry" }}/{{ index .Values "modules" "text2vec-transformers" "repo" }}:{{ index .Values "modules" "text2vec-transformers" "tag" }}
@@ -30,6 +39,11 @@ spec:
           {{- end }}
         resources:
 {{ index .Values "modules" "text2vec-transformers" "resources" | toYaml | indent 10 }}
+        {{- if index .Values "modules" "text2vec-transformers" "envconfig" "enable_cuda" }}
+        volumeMounts:
+        - name: nvidia-mps
+          mountPath: /tmp/nvidia-mps
+        {{- end }}
         livenessProbe:
           httpGet:
             path: /.well-known/live

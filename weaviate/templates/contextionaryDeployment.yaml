@@ -16,6 +16,8 @@ spec:
       labels:
         app: contextionary
     spec:
+      # hostIPC is required for Nvidia MPS communication
+      hostIPC: true
       containers:
       - name: contextionary
         image: {{ index .Values "modules" "text2vec-contextionary" "registry" }}/{{ index .Values "modules" "text2vec-contextionary" "repo" }}:{{ index .Values "modules" "text2vec-contextionary" "tag" }}
@@ -33,6 +35,13 @@ spec:
         resources:
 {{ index .Values "modules" "text2vec-contextionary" "resources" | toYaml | indent 10 }}
       {{- with index .Values "modules" "text2vec-contextionary" "nodeSelector" | default .Values.nodeSelector }}
+        volumeMounts:
+        - name: nvidia-mps
+          mountPath: /tmp/nvidia-mps
+      volumes:
+      - name: nvidia-mps
+        hostPath:
+          path: /tmp/nvidia-mps
       nodeSelector:
         {{ toYaml . | nindent 8 }}
       {{- end }}

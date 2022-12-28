@@ -16,6 +16,8 @@ spec:
       labels:
         app: {{ index .Values "modules" "text-spellcheck" "fullnameOverride" }}
     spec:
+      # hostIPC is required for Nvidia MPS communication
+      hostIPC: true
       containers:
       - name: {{ index .Values "modules" "text-spellcheck" "fullnameOverride" }}
         image: {{ index .Values "modules" "text-spellcheck" "registry" }}/{{ index .Values "modules" "text-spellcheck" "repo" }}:{{ index .Values "modules" "text-spellcheck" "tag" }}
@@ -30,6 +32,9 @@ spec:
           {{ end }}
         resources:
 {{ index .Values "modules" "text-spellcheck" "resources" | toYaml | indent 10 }}
+        volumeMounts:
+        - name: nvidia-mps
+          mountPath: /tmp/nvidia-mps
         livenessProbe:
           httpGet:
             path: /.well-known/live
@@ -44,6 +49,10 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 3
       {{- with index .Values "modules" "text-spellcheck" "nodeSelector" | default .Values.nodeSelector }}
+      volumes:
+      - name: nvidia-mps
+        hostPath:
+          path: /tmp/nvidia-mps
       nodeSelector:
         {{ toYaml . | nindent 8 }}
       {{- end }}
