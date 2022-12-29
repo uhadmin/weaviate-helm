@@ -8,6 +8,7 @@ metadata:
     app: contextionary
     app.kubernetes.io/name: weaviate
     app.kubernetes.io/managed-by: helm
+    requiresSoleAccessToGpu: 'true'
 spec:
   replicas: {{ index .Values "modules" "text2vec-contextionary" "replicas" }}
   selector:
@@ -25,6 +26,18 @@ spec:
       {{- else if (index .Values "serviceAccountName") }}
       serviceAccountName: {{ index .Values "serviceAccountName" }}
       {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: requiresSoleAccessToGpu
+                  operator: In
+                  values:
+                  - 'true'
+              topologyKey: kubernetes.io/hostname
       containers:
       - name: contextionary
         image: {{ index .Values "modules" "text2vec-contextionary" "registry" }}/{{ index .Values "modules" "text2vec-contextionary" "repo" }}:{{ index .Values "modules" "text2vec-contextionary" "tag" }}

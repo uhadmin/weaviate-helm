@@ -8,6 +8,7 @@ metadata:
     app: {{ index .Values "modules" "multi2vec-clip" "fullnameOverride" }}
     app.kubernetes.io/name: weaviate
     app.kubernetes.io/managed-by: helm
+    requiresSoleAccessToGpu: 'true'
 spec:
   replicas: {{ index .Values "modules" "multi2vec-clip" "replicas" }}
   selector:
@@ -23,6 +24,18 @@ spec:
       {{- else if (index .Values "serviceAccountName") }}
       serviceAccountName: {{ index .Values "serviceAccountName" }}
       {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: requiresSoleAccessToGpu
+                  operator: In
+                  values:
+                  - 'true'
+              topologyKey: kubernetes.io/hostname
       containers:
       - name: {{ index .Values "modules" "multi2vec-clip" "fullnameOverride" }}
         image: {{ index .Values "modules" "multi2vec-clip" "registry" }}/{{ index .Values "modules" "multi2vec-clip" "repo" }}:{{ index .Values "modules" "multi2vec-clip" "tag" }}
