@@ -65,6 +65,7 @@ spec:
             port: 8080
           initialDelaySeconds: {{ index .Values "modules" "text2vec-transformers" "probeInitialDelaySeconds" }}
           periodSeconds: 30
+          timeoutSeconds: 20
       {{- with index .Values "modules" "text2vec-transformers" "nodeSelector" | default .Values.nodeSelector }}
       nodeSelector:
         {{ toYaml . | nindent 8 }}
